@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Solicitudes</h2>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevaTareaModal">
+    + Nueva Tarea
+    </button>
+</div>
+
+<div class="modal fade" id="nuevaTareaModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content text-dark"> <div class="modal-header">
+        <h5 class="modal-title" id="modalLabel">Crear Nueva Tarea</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST">
+        {% csrf_token %}
+        <div class="modal-body">
+            {{ form.as_p }} </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success">Guardar Tarea</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+    {% for task in tasks %}
+    <div class="col-md-4 mb-3">
+        <div class="card shadow-sm h-100">
+            <div class="card-header d-flex justify-content-between">
+                <span>De: {{ task.task_from }}</span>
+                <small>{{ task.created_at|date:"d/m/Y" }}</small>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Para: {{ task.task_to }}</h5>
+                <p class="card-text">{{ task.description }}</p>
+            </div>
+            <div class="card-footer bg-transparent border-0 text-end">
+                <span class="badge rounded-pill bg-{{ task.get_status_color }} text-dark p-2">
+                    {{ task.get_state_display }}
+                </span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
