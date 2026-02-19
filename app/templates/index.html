@@ -32,17 +32,25 @@
     <div class="col-md-4 mb-3">
         <div class="card shadow-sm h-100">
             <div class="card-header d-flex justify-content-between">
-                <span>De: {{ task.task_from }}</span>
+                <span>{{ task.proceso }}</span>
                 <small>{{ task.created_at|date:"d/m/Y" }}</small>
             </div>
             <div class="card-body">
-                <h5 class="card-title">Para: {{ task.task_to }}</h5>
-                <p class="card-text">{{ task.description }}</p>
+                <h5 class="card-title">Reportado por: {{ task.reportado_por }}</h5>
+                <p class="card-text">{{ task.descripcion }}</p>
             </div>
             <div class="card-footer bg-transparent border-0 text-end">
-                <span class="badge rounded-pill bg-{{ task.get_status_color }} text-dark p-2">
-                    {{ task.get_state_display }}
-                </span>
+                {% if task.state != 'Completado' %}
+                    <a href="{% url 'completar_tarea' task.id %}" 
+                    class="btn badge rounded-pill bg-{{ task.get_status_color }} text-dark p-2"
+                    onclick="return confirm('¿Marcar esta tarea como completada?')">
+                        {{ task.get_state_display }}
+                    </a>
+                {% else %}
+                    <span class="badge rounded-pill bg-success text-white p-2">
+                        {{ task.get_state_display }}
+                    </span>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -5,3 +5,4 @@ import app.models as models
 
 
 admin.site.register(models.Task)
+admin.site.register(models.Procesos)

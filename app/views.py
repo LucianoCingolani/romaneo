@@ -1,4 +1,4 @@
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from app import models
 from app.forms import TaskForm
 
@@ -9,7 +9,7 @@ def home(request):
         form = TaskForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('home') # Recarga la página para ver la nueva tarea
+            return redirect('home') 
     else:
         form = TaskForm()
 
@@ -18,3 +18,9 @@ def home(request):
         'tasks': tasks,
         'form': form
     })
+
+def completar_tarea(request, task_id):
+    task = get_object_or_404(models.Task, id=task_id)
+    task.state = 'C' 
+    task.save()
+    return redirect('home')
