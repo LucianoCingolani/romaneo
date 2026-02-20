@@ -6,6 +6,8 @@ import csv
 from django.utils import timezone
 from django.template.loader import get_template
 from xhtml2pdf import pisa
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 
 # Create your views here.
 
@@ -130,4 +132,69 @@ def exportar_tareas_pdf(request):
     
     if pisa_status.err:
        return HttpResponse('Ocurrió un error al generar el PDF', status=500)
+    return response
+
+def exportar_tareas_excel(request):
+    tasks = models.Task.objects.all().order_by('-created_at')
+    
+    f_fecha = request.GET.get('fecha')
+    f_proceso = request.GET.get('proceso')
+    f_estado = request.GET.get('estado')
+
+    if f_fecha:
+        tasks = tasks.filter(created_at__date=f_fecha)
+    if f_proceso:
+        tasks = tasks.filter(proceso_id=f_proceso)
+    if f_estado:
+        tasks = tasks.filter(state=f_estado)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Registro de Solicitudes"
+
+    header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid") # Azul oscuro
+    header_font = Font(bold=True, color="FFFFFF", size=12)
+    center_ali = Alignment(horizontal="center", vertical="center")
+    border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+
+    headers = ['ID', 'FECHA', 'PROCESO', 'REPORTADO POR', 'PRIORIDAD', 'ESTADO', 'DESCRIPCIÓN', 'SOLUCIÓN']
+    ws.append(headers)
+
+    for cell in ws[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = center_ali
+        cell.border = border
+
+    for t in tasks:
+        row = [
+            t.id,
+            t.created_at.strftime('%d/%m/%Y %H:%M'),
+            t.proceso.nombre,
+            t.reportado_por,
+            t.get_priority_display(),
+            t.get_state_display(),
+            t.descripcion,
+            t.solucion if t.solucion else "Pendiente"
+        ]
+        ws.append(row)
+        for cell in ws[ws.max_row]:
+            cell.border = border
+            cell.alignment = Alignment(vertical="top", wrap_text=True) 
+
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except: pass
+        adjusted_width = (max_length + 2)
+        ws.column_dimensions[column].width = min(adjusted_width, 50)
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="Registro_Solicitudes_{f_fecha or "General"}.xlsx"'
+    
+    wb.save(response)
     return response
