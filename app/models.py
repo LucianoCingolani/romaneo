@@ -31,6 +31,7 @@ class Task(models.Model):
         default='P'
     )
     descripcion = models.TextField()
+    solucion = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.reportado_por + ' - ' + self.proceso.nombre
@@ -43,3 +44,18 @@ class Task(models.Model):
         else:
             return 'warning'  
     
+    def get_state_display(self):
+        return dict(self._meta.get_field('state').choices).get(self.state, 'Desconocido')
+    
+    def get_priority_color(self):
+        if self.priority == 'A':
+            return 'danger'   # Rojo para Alta
+        elif self.priority == 'M':
+            return 'warning'  # Amarillo para Media
+        elif self.priority == 'B':
+            return 'info'     # Azul/Cian para Baja
+        return 'secondary'
+
+    # Ya que Django trae un método automático, puedes usar este o el nativo
+    def get_priority_label(self):
+        return dict(self._meta.get_field('priority').choices).get(self.priority, 'N/A')
